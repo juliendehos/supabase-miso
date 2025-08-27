@@ -1,0 +1,40 @@
+{
+  "name": "miso-supabase",
+  "version": "1.0.0",
+  "description": "miso-supabase: A client library for miso and supabase",
+  "scripts": {
+    "clean": "tsc --build --clean && find ts -name '*~' -or -name '*.js' -delete",
+    "watch": "tsc --project tsconfig.lib.json --watch",
+    "build": "bun build --outfile=js/miso-supabase.js ./ts/index.ts --target=browser",
+    "js": "bun run build",
+  },
+  "type": "module",
+  "module": "ts/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haskell-miso/miso-supabase.git"
+  },
+  "keywords": [
+    "miso",
+    "supabase",
+    "database",
+    "haskell"
+  ],
+  "author": "dmijo",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/haskell-miso/miso-supabase/issues"
+  },
+  "homepage": "https://haskell-miso.org",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "files": [
+    "ts/index.ts",
+    "package.json",
+    "README.md"
+  ],
+  "dependencies": {
+    "@supabase/supabase-js": "latest"
+  }
+}

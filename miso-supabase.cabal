@@ -1,0 +1,43 @@
+cabal-version:      3.0
+name:               miso-supabase
+version:            0.1.0.0
+synopsis:           Client library miso and supabase
+description:        miso integration with supabase
+homepage:           https://haskell-miso.org
+license:            BSD-3-Clause
+license-file:       LICENSE
+author:             dmjio
+maintainer:         code@dmj.io
+copyright:          dmjio (c) 2025
+category:           Database
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+extra-source-files: README.md
+
+common wasm
+  if arch(wasm32)
+    ghc-options:
+      -Wall
+      -no-hs-main
+      -optl-mexec-model=reactor "-optl-Wl,--export=hs_start"
+      -ddump-splices
+    cpp-options:
+      -DWASM
+
+executable app
+  import:
+    wasm
+  main-is:
+    Main.hs
+  build-depends:
+    base < 5, miso, jsaddle, aeson
+  js-sources:
+    js/miso-supabase.js
+  hs-source-dirs:
+    app
+  ghc-options:
+    -Wall
+  default-language:
+    Haskell2010
+  default-extensions:
+    CPP TemplateHaskell
