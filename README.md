@@ -8,15 +8,23 @@ A [Haskell](https://haskell.org) [miso](https://haskell-miso.org) client library
 This is a [Haskell](https://haskell.org) front-end library, meant for use with the JS, or Web Assembly backend with GHC.
 
 > [!WARNING]
-> This is a work in-progress, most things are not implemented, at all.
+> This is a work in-progress, most things are not implemented, at all. Please consider contributing
 
 ### Usage
 
 For local development with [miso](https://github.com/dmjio/miso) you can include [supabase](https://github.com/supabase) as a JavaScript module.
 
 ```haskell
+-----------------------------------------------------------------------------
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
+-----------------------------------------------------------------------------
+module Main (main) where
+-----------------------------------------------------------------------------
+import Supabase.Miso.Auth
+-----------------------------------------------------------------------------
 main :: IO ()
-main = run $ startApp misoComponent
+main = run $ startApp myComponent
   { scripts =
      [ Module
         """
@@ -27,6 +35,27 @@ main = run $ startApp misoComponent
         """
      ]
   }
+-----------------------------------------------------------------------------
+data Action
+  = SuccessfullyRegistered AuthResponse
+  | ErrorRegistering MisoString
+  | NewUserWithEmail SignUpEmail
+  | NewUserWithPhone SignUpPhone
+  deriving (Show, Eq)
+-----------------------------------------------------------------------------
+update :: NewUser -> Effect parent model Action
+update = \case
+  SuccessfullyRegistered response ->
+    io_ $ do 
+      consoleLog "success"
+      consoleLog $ ms (show response)
+  ErrorRegistering errorMessage ->
+    io_ (consoleError errorMessage)
+  NewUserWithEmail email ->
+    signUpEmail email SuccessfullyRegistered ErrorRegistering
+  NewUserWithPhone phone ->
+    signUpPhone email SuccessfullyRegistered ErrorRegistering
+-----------------------------------------------------------------------------
 ```
 
 ### Build

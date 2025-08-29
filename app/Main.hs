@@ -26,7 +26,7 @@ foreign export javascript "hs_start" main :: IO ()
 #endif
 
 main :: IO ()
-main = run $ startApp (component () Main.update Main.view)
+main = run $ startApp (component () noop (const "foo"))
 #ifndef WASM
   { scripts =
     [ Module 
