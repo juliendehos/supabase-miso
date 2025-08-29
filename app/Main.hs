@@ -1,24 +1,24 @@
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE MultilineStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE AllowAmbiguousTypes       #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE OverloadedStrings         #-}
-{-# LANGUAGE TypeApplications          #-}
-{-# LANGUAGE KindSignatures            #-}
 {-# LANGUAGE MultilineStrings          #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE TypeApplications          #-}
+{-# LANGUAGE MultilineStrings          #-}
+{-# LANGUAGE KindSignatures            #-}
 {-# LANGUAGE DataKinds                 #-}
 {-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE CPP                       #-}
 module Main where
 
--- import Data.Function
-import Language.Javascript.JSaddle
-import Control.Monad
-import Data.Aeson hiding (Object)
-import Data.Proxy
-import GHC.Records
-import GHC.TypeLits
-import Miso
+import           Control.Monad
+import           Data.Aeson hiding (Object)
+import           Data.Proxy
+import           GHC.Records
+import           GHC.TypeLits
+import           Language.Javascript.JSaddle
+import           Miso
 import qualified Miso.Html.Element as H
 
 #ifdef WASM
@@ -165,7 +165,8 @@ gte
   => field
   -> Proxy person
   -> Where
-gte field_ Proxy = GTE (ms (symbolVal (Proxy @name))) (toJSON field_)
+gte field_ Proxy =
+  GTE (ms (symbolVal (Proxy @name))) (toJSON field_)
 
 select :: [Field] -> Query ()
 select = SELECT

@@ -1,9 +1,9 @@
 cabal-version:      3.0
-name:               miso-supabase
+name:               supabase-miso
 version:            0.1.0.0
-synopsis:           Client library miso and supabase
-description:        miso integration with supabase
-homepage:           https://haskell-miso.org
+synopsis:           A Haskell miso client library for supabase.js
+description:        miso integration with supabase.js
+homepage:           https://github.com/haskell-miso/supabase-miso
 license:            BSD-3-Clause
 license-file:       LICENSE
 author:             dmjio
@@ -24,6 +24,16 @@ common wasm
     cpp-options:
       -DWASM
 
+library
+  hs-source-dirs:
+    src
+  build-depends:
+    base < 5, miso, jsaddle, aeson, time, unordered-containers, vector, hashable
+  exposed-modules:
+    Supabase.Miso.Auth
+  default-language:
+    Haskell2010
+
 executable app
   import:
     wasm
@@ -32,7 +42,7 @@ executable app
   build-depends:
     base < 5, miso, jsaddle, aeson
   js-sources:
-    js/miso-supabase.js
+    js/supabase-miso.js
   hs-source-dirs:
     app
   ghc-options:

@@ -1,4 +1,4 @@
-# Revision history for miso-supabase
+# Revision history for supabase-miso
 
 ## 0.1.0.0 -- YYYY-mm-dd
 
