@@ -32,7 +32,8 @@ runSupabase
   -- ^ errorful callback
   -> JSM ()
 runSupabase namespace fnName args successful errorful = do
-  void (jsg "globalThis" # "runSupabase" $ (namespace, fnName, args, successful, errorful))
+  args_ <- makeArgs args
+  void (jsg "globalThis" # "runSupabase" $ (namespace, fnName, args_, successful, errorful))
 -----------------------------------------------------------------------------
 emptyArgs :: [JSVal]
 emptyArgs = []

@@ -8,9 +8,21 @@
 -----------------------------------------------------------------------------
 module Supabase.Miso.Auth
   ( -- * Functions
-    -- signUp
+    signUpEmail
     -- * Types
-    User (..)
+  , User               (..)
+  , AuthData           (..)
+  , Identity           (..)
+  , SignUpPhone        (..)
+  , SignUpEmail        (..)
+  , AppMetadata        (..)
+  , SignUpChannel      (..)
+  , AuthResponse       (..)
+  , SignUpEmailOptions (..)
+  , SignUpPhoneOptions (..)
+  -- * Smart constructors
+  , defaultSignUpEmailOptions
+  , defaultSignUpPhoneOptions
   ) where
 -----------------------------------------------------------------------------
 import           Data.Hashable
@@ -123,13 +135,13 @@ instance ToJSVal SignUpPhone where
         opts_ <- toJSVal opts
         set "options" opts_ o
       toJSVal o
------------------------------------------------------------------------------  
+-----------------------------------------------------------------------------
 data SupabaseResult
   = SupabaseResult
   { supabaseData :: Value
   , supabaseError :: Value
   } deriving (Show, Eq)
------------------------------------------------------------------------------  
+-----------------------------------------------------------------------------
 signUpEmail
   :: SignUpEmail
   -- ^ SignUp options
@@ -138,7 +150,7 @@ signUpEmail
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-signUpEmail signUpEmail successful errorful = withSink $ \sink -> do
+signUpEmail args successful errorful = withSink $ \sink -> do
   successful_ <-
     syncCallback1 $ \result -> do
       fromJSON <$> fromJSValUnchecked result >>= \case
@@ -155,7 +167,34 @@ signUpEmail signUpEmail successful errorful = withSink $ \sink -> do
           sink $ errorful (ms msg)
         Success result ->
           sink (successful result)
-  runSupabase "auth" "signUp" emptyArgs successful_ errorful_
+  runSupabase "auth" "signUp" [args] successful_ errorful_
+-----------------------------------------------------------------------------
+signUpPhone
+  :: SignUpPhone
+  -- ^ SignUp options
+  -> (AuthResponse -> action)
+  -- ^ Response
+  -> (MisoString -> action)
+  -- ^ Error case
+  -> Effect parent model action
+signUpPhone args successful errorful = withSink $ \sink -> do
+  successful_ <-
+    syncCallback1 $ \result -> do
+      fromJSON <$> fromJSValUnchecked result >>= \case
+        Error msg -> do
+          consoleError "signUpPhone: Failed to parse JSON from supabase call, this is a bug"
+          sink $ errorful (ms msg)
+        Success result ->
+          sink (successful result)
+  errorful_ <-
+    syncCallback1 $ \result -> do
+      fromJSON <$> fromJSValUnchecked result >>= \case
+        Error msg -> do
+          consoleError "signUpPhone: Failed to parse JSON from supabase call, this is a bug"
+          sink $ errorful (ms msg)
+        Success result ->
+          sink (successful result)
+  runSupabase "auth" "signUp" [args] successful_ errorful_
 -----------------------------------------------------------------------------
 data AuthResponse
   = AuthResponse
