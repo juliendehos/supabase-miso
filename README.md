@@ -7,6 +7,9 @@ A [Haskell](https://haskell.org) [miso](https://haskell-miso.org) client library
 
 This is a [Haskell](https://haskell.org) front-end library, meant for use with the JS, or Web Assembly backend with GHC.
 
+> [!WARNING]
+> This is a work in-progress, most things are not implemented, at all.
+
 ### Usage
 
 For local development with [miso](https://github.com/dmjio/miso) you can include [supabase](https://github.com/supabase) as a JavaScript module.

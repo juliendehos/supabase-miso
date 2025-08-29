@@ -22,6 +22,8 @@ import           Control.Monad
 import           Language.Javascript.JSaddle hiding (Success)
 import           Miso hiding ((<#))
 -----------------------------------------------------------------------------
+import           Supabase.Miso.Core
+-----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/auth-api
 data SignUpEmail
   = SignUpEmail
@@ -74,6 +76,17 @@ data SignUpPhoneOptions
   , supSignUpData :: Maybe Value
   } deriving (Show, Eq)
 -----------------------------------------------------------------------------
+instance ToJSVal SignUpPhoneOptions where
+  toJSVal SignUpPhoneOptions {..} = do
+    o <- create
+    forM supCaptchaToken $ \captchaToken_ ->
+      set "captchaToken" captchaToken_ o
+    forM supChannel $ \email_ ->
+      set "channel" email_ o
+    forM supSignUpData $ \data_ ->
+      flip (set "data") o =<< toJSVal data_
+    toJSVal o
+-----------------------------------------------------------------------------
 instance ToJSVal SignUpEmailOptions where
   toJSVal SignUpEmailOptions {..} = do
     o <- create
@@ -89,13 +102,13 @@ instance ToJSVal SignUpEmail where
   toJSVal = \case
     SignUpEmail {..} -> do
       o <- create
-      -- email_ <- toJSVal email
-      -- password_ <- toJSVal password
+      email_ <- toJSVal sueEmail
+      password_ <- toJSVal suePassword
       set "email" sueEmail o
       set "password" suePassword o
-      -- forM_ options $ \opts -> do
-      --   opts_ <- toJSVal opts
-      --   set "options" opts_ o
+      forM_ sueOptions $ \opts -> do
+        opts_ <- toJSVal opts
+        set "options" opts_ o
       toJSVal o
 -----------------------------------------------------------------------------
 instance ToJSVal SignUpPhone where
@@ -106,6 +119,9 @@ instance ToJSVal SignUpPhone where
       password_ <- toJSVal supPassword
       set "phone" phone_ o
       set "password" password_ o
+      forM_ supOptions $ \opts -> do
+        opts_ <- toJSVal opts
+        set "options" opts_ o
       toJSVal o
 -----------------------------------------------------------------------------  
 data SupabaseResult
@@ -114,7 +130,7 @@ data SupabaseResult
   , supabaseError :: Value
   } deriving (Show, Eq)
 -----------------------------------------------------------------------------  
-signUpEmail'
+signUpEmail
   :: SignUpEmail
   -- ^ SignUp options
   -> (AuthResponse -> action)
@@ -122,21 +138,24 @@ signUpEmail'
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-signUpEmail' signUpEmail successful errorful = withSink $ \sink -> do
+signUpEmail signUpEmail successful errorful = withSink $ \sink -> do
   successful_ <-
     syncCallback1 $ \result -> do
       fromJSON <$> fromJSValUnchecked result >>= \case
-        Error msg -> sink $ errorful (ms msg)
-        Success result -> sink (successful result)
+        Error msg -> do
+          consoleError "signUpEmail: Failed to parse JSON from supabase call, this is a bug"
+          sink $ errorful (ms msg)
+        Success result ->
+          sink (successful result)
   errorful_ <-
     syncCallback1 $ \result -> do
       fromJSON <$> fromJSValUnchecked result >>= \case
-        Error msg -> sink $ errorful (ms msg)
-        Success result -> sink (successful result)
-  runSupabase ("auth", "signUp", successful_, errorful_)
------------------------------------------------------------------------------
-runSupabase :: MakeArgs args => args -> JSM ()
-runSupabase args = void (jsg "globalThis" # "runSupabase" $ args)
+        Error msg -> do
+          consoleError "signUpEmail: Failed to parse JSON from supabase call, this is a bug"
+          sink $ errorful (ms msg)
+        Success result ->
+          sink (successful result)
+  runSupabase "auth" "signUp" emptyArgs successful_ errorful_
 -----------------------------------------------------------------------------
 data AuthResponse
   = AuthResponse
