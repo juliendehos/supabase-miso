@@ -31,6 +31,10 @@ library
     base < 5, miso, jsaddle, aeson, time, unordered-containers, vector, hashable
   exposed-modules:
     Supabase.Miso.Auth
+    Supabase.Miso.Database
+    Supabase.Miso.Edge
+    Supabase.Miso.Realtime
+    Supabase.Miso.Storage
   default-language:
     Haskell2010
 
