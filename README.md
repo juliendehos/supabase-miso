@@ -41,7 +41,7 @@ data Action
   | NewUserWithPhone SignUpPhone
   deriving (Show, Eq)
 -----------------------------------------------------------------------------
-update :: NewUser -> Effect parent model Action
+update :: Action -> Effect parent model Action
 update = \case
   SuccessfullyRegistered response ->
     io_ $ do 
