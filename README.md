@@ -6,7 +6,7 @@
 A [Haskell](https://haskell.org) [miso](https://haskell-miso.org) client library for [supabase](https://supabase.com). This is a [Haskell](https://haskell.org) front-end library, meant for use with the JS, or [Web Assembly](https://ghc.gitlab.haskell.org/ghc/doc/users_guide/wasm.html) backend with GHC.
 
 > [!WARNING]
-> This is a work in-progress, most things are not implemented, at all. Please consider contributing.
+> This is a work in-progress, many things are not implemented. Please consider contributing.
 
 ### Usage
 
