@@ -20,6 +20,7 @@ module Supabase.Miso.Auth
   , AuthResponse       (..)
   , SignUpEmailOptions (..)
   , SignUpPhoneOptions (..)
+  , Email (..)
   -- * Smart constructors
   , defaultSignUpEmailOptions
   , defaultSignUpPhoneOptions
