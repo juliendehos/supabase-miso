@@ -45,7 +45,7 @@ executable app
   main-is:
     Main.hs
   build-depends:
-    base < 5, miso, jsaddle, aeson
+    base < 5, miso, jsaddle, aeson, supabase-miso
   js-sources:
     js/supabase-miso.js
   hs-source-dirs:
