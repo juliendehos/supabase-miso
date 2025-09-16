@@ -6,8 +6,7 @@
 {-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE RecordWildCards           #-}
 
-import Data.Aeson hiding ((.=))
-import Data.Aeson.KeyMap qualified as KM
+import Data.Aeson (Value)
 import Miso
 import Miso.CSS qualified as CSS
 import Miso.Lens
@@ -15,24 +14,8 @@ import Miso.Html.Element as H
 import Miso.Html.Event as E
 -- import Miso.Html.Property as P
 
+import Supabase.Miso.Core
 import Supabase.Miso.Storage
-
--------------------------------------------------------------------------------
--- helper
--------------------------------------------------------------------------------
-
-emptyOptions :: Value
-emptyOptions = Object KM.empty
-
-(.+) :: ToJSON a => Value -> (KM.Key, a) -> Value
-(.+) opts (k, v) =
-  let v' = toJSON v
-  in case opts of
-    Object o  -> Object (KM.insert k v' o)
-    _         -> Object (KM.singleton k v')
-
-optionsExample1 :: Value
-optionsExample1 = emptyOptions .+ ("limit", 10) .+ ("search", "windsurf")
 
 -------------------------------------------------------------------------------
 -- model
@@ -88,7 +71,7 @@ updateModel = \case
     io_ $ consoleLog msg
 
   ActionAskListBuckets ->
-    listBuckets ActionHandleValue ActionError
+    listBuckets ActionHandleValues ActionError
 
   ActionAskListAllFiles fp opts ->
     listAllFiles "avatars" fp opts ActionHandleValues ActionError
@@ -105,11 +88,11 @@ viewModel Model{..} = div_ []
       ]
   , p_ [] 
       [ button_ 
-          [ onClick (ActionAskListAllFiles "" Null) ]
-          [ "listAllFiles '' Null" ]
+          [ onClick (ActionAskListAllFiles "" emptyOptions) ]
+          [ "listAllFiles '' emptyOptions" ]
       , button_ 
-          [ onClick (ActionAskListAllFiles "test" Null) ]
-          [ "listAllFiles 'test' Null" ]
+          [ onClick (ActionAskListAllFiles "test" emptyOptions) ]
+          [ "listAllFiles 'test' emptyOptions" ]
       , button_ 
           [ onClick (ActionAskListAllFiles "" ( emptyOptions .+ ("limit", 10::Int) .+ ("search", "windsurf"::String) )) ]
           [ "listAllFiles ' {limit: 10, search: 'windsurf'}" ]

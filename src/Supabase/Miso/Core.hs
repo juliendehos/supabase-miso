@@ -5,6 +5,7 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE ImportQualifiedPost        #-}
 -----------------------------------------------------------------------------
 module Supabase.Miso.Core
   ( -- * Functions
@@ -14,9 +15,12 @@ module Supabase.Miso.Core
   , successCallback
   , successCallbackFile
   , errorCallback
+  , emptyOptions
+  , (.+)
   ) where
 -----------------------------------------------------------------------------
-import Data.Aeson
+import Data.Aeson as Aeson
+import Data.Aeson.KeyMap qualified as KM
 import Miso.String
 import Miso.FFI (syncCallback1, File)
 -----------------------------------------------------------------------------
@@ -101,3 +105,16 @@ errorCallback sink errorful =
       Success result ->
         sink (errorful result)
 -----------------------------------------------------------------------------
+
+emptyOptions :: Value
+emptyOptions = Aeson.Object KM.empty
+
+(.+) :: ToJSON a => Value -> (KM.Key, a) -> Value
+(.+) opts (k, v) =
+  let v' = toJSON v
+  in case opts of
+    Aeson.Object o  -> Aeson.Object (KM.insert k v' o)
+    _               -> Aeson.Object (KM.singleton k v')
+
+
+

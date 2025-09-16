@@ -1,15 +1,26 @@
 -----------------------------------------------------------------------------
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeSynonymInstances       #-}
-{-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RecordWildCards            #-}
-{-# LANGUAGE LambdaCase                 #-}
 -----------------------------------------------------------------------------
 module Supabase.Miso.Storage
   ( -- * Functions
-    listBuckets
+    createBucket
+  , getBucket
+  , listBuckets
+  , updateBucket
+  , deleteBucket
+  , emptyBucket
+  , uploadFile
+  , downloadFile
   , listAllFiles
+  , replaceFile
+  , moveFile
+  , copyFile
+  , deleteFiles
+  , createSignedUrl
+  , createSignedUrls
+  , createSignedUploadUrl
+  , uploadToSignedUrl
+  , getPublicUrl
     -- * Types
   ) where
 -----------------------------------------------------------------------------
@@ -25,37 +36,23 @@ import           Miso.FFI
 -----------------------------------------------------------------------------
 import           Supabase.Miso.Core
 -----------------------------------------------------------------------------
-data BucketOptions
-  = BucketOptions
-  { boPublic :: Bool
-  , boAllowedMimeTypes :: [MisoString]
-  , boFileSizeLimit :: Int
-  } deriving (Show, Eq)
------------------------------------------------------------------------------
-instance ToJSVal BucketOptions where
-  toJSVal BucketOptions {..} = do
-    o <- create
-    set "public" boPublic o
-    set "allowedMimeTypes" boAllowedMimeTypes o
-    set "fileSizeLimit" boFileSizeLimit o
-    toJSVal o
------------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-createbucket
 createBucket
   :: MisoString
   -- ^ Bucket identifier
-  -> BucketOptions
+  -> Value
+  -- ^ Options
   -> (Value -> action)
   -- ^ Response
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-createBucket args bucketOptions successful errorful = withSink $ \sink -> do
+createBucket args opts successful errorful = withSink $ \sink -> do
   successful_ <- successCallback sink errorful successful
   errorful_ <- errorCallback sink errorful
   args_ <- toJSVal args
-  bucketOptions_ <- toJSVal bucketOptions
-  runSupabase "storage" "createBucket" [args_, bucketOptions_] successful_ errorful_
+  opts_ <- toJSVal opts
+  runSupabase "storage" "createBucket" [args_, opts_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-getbucket
 getBucket
@@ -74,7 +71,7 @@ getBucket args successful errorful = withSink $ \sink -> do
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-listbuckets
 listBuckets
-  :: (Value -> action)
+  :: ([Value] -> action)
   -- ^ Response
   -> (MisoString -> action)
   -- ^ Error case
@@ -88,18 +85,19 @@ listBuckets successful errorful = withSink $ \sink -> do
 updateBucket
   :: MisoString
   -- ^ Bucket identifier
-  -> BucketOptions
+  -> Value
+  -- ^ options
   -> (Value -> action)
   -- ^ Response
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-updateBucket args bucketOptions successful errorful = withSink $ \sink -> do
+updateBucket args opts successful errorful = withSink $ \sink -> do
   successful_ <- successCallback sink errorful successful
   errorful_ <- errorCallback sink errorful
   args_ <- toJSVal args
-  bucketOptions_ <- toJSVal bucketOptions
-  runSupabase "storage" "updateBucket" [args_, bucketOptions_] successful_ errorful_
+  opts_ <- toJSVal opts
+  runSupabase "storage" "updateBucket" [args_, opts_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-deletebucket
 deleteBucket
@@ -135,10 +133,10 @@ emptyBucket args successful errorful = withSink $ \sink -> do
 uploadFile
   :: MisoString
   -- ^ Bucket identifier
-  -> File
-  -- ^ The file to upload
   -> MisoString
   -- ^ The file name
+  -> File
+  -- ^ The file to upload
   -> Value
   -- ^ Options
   -> (Value -> action)
@@ -146,11 +144,10 @@ uploadFile
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-uploadFile bucket file fileName options successful errorful = withSink $ \sink -> do
+uploadFile bucket fileName file options successful errorful = withSink $ \sink -> do
   successful_ <- successCallback sink errorful successful
   errorful_ <- errorCallback sink errorful
   options_ <- toJSVal options
-  bucket_ <- toJSVal bucket
   file_ <- toJSVal file
   fileName_ <- toJSVal fileName
   runSupabaseFrom "storage" bucket "upload" [fileName_, file_, options_] successful_ errorful_
@@ -161,16 +158,19 @@ downloadFile
   -- ^ Bucket identifier
   -> MisoString
   -- ^ The file name
+  -> Value
+  -- ^ Options
   -> (File -> action)
   -- ^ Response
   -> (MisoString -> action)
   -- ^ Errorful
   -> Effect parent model action
-downloadFile bucket fileName successful errorful = withSink $ \sink -> do
+downloadFile bucket fileName opts successful errorful = withSink $ \sink -> do
   successful_ <- successCallbackFile sink errorful successful
   errorful_ <- errorCallback sink errorful
-  bucket_ <- toJSVal bucket
-  runSupabaseFrom "storage" bucket "download" [fileName] successful_ errorful_
+  fileName_ <- toJSVal fileName
+  opts_ <- toJSVal opts
+  runSupabaseFrom "storage" bucket "download" [fileName_, opts_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-from-list
 listAllFiles
@@ -196,10 +196,10 @@ listAllFiles bucket fileName options successful errorful = withSink $ \sink -> d
 replaceFile
   :: MisoString
   -- ^ Bucket identifier
-  -> File
-  -- ^ The file to upload
   -> MisoString
   -- ^ The file name
+  -> File
+  -- ^ The file to upload
   -> Value
   -- ^ Options
   -> (Value -> action)
@@ -207,11 +207,10 @@ replaceFile
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-replaceFile bucket file fileName options successful errorful = withSink $ \sink -> do
+replaceFile bucket fileName file options successful errorful = withSink $ \sink -> do
   successful_ <- successCallback sink errorful successful
   errorful_ <- errorCallback sink errorful
   options_ <- toJSVal options
-  bucket_ <- toJSVal bucket
   file_ <- toJSVal file
   fileName_ <- toJSVal fileName
   runSupabaseFrom "storage" bucket "update" [fileName_, file_, options_] successful_ errorful_
@@ -224,17 +223,20 @@ moveFile
   -- ^ Target file
   -> MisoString
   -- ^ New file
+  -> Value
+  -- ^ Options
   -> (Value -> action)
   -- ^ Response
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-moveFile bucket target destination successful errorful = withSink $ \sink -> do
+moveFile bucket target destination opts successful errorful = withSink $ \sink -> do
   successful_ <- successCallback sink errorful successful
   errorful_ <- errorCallback sink errorful
   target_ <- toJSVal target
   destination_ <- toJSVal destination
-  runSupabaseFrom "storage" bucket "move" [target_, destination_] successful_ errorful_
+  opts_ <- toJSVal opts
+  runSupabaseFrom "storage" bucket "move" [target_, destination_, opts_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-from-copy
 copyFile
@@ -244,17 +246,20 @@ copyFile
   -- ^ Target file
   -> MisoString
   -- ^ New file
+  -> Value
+  -- ^ Options
   -> (Value -> action)
   -- ^ Response
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-copyFile bucket target destination successful errorful = withSink $ \sink -> do
+copyFile bucket target destination opts successful errorful = withSink $ \sink -> do
   successful_ <- successCallback sink errorful successful
   errorful_ <- errorCallback sink errorful
   target_ <- toJSVal target
   destination_ <- toJSVal destination
-  runSupabaseFrom "storage" bucket "copy" [target_, destination_] successful_ errorful_
+  opts_ <- toJSVal opts
+  runSupabaseFrom "storage" bucket "copy" [target_, destination_, opts_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-from-remove
 deleteFiles
@@ -272,6 +277,26 @@ deleteFiles bucket files successful errorful = withSink $ \sink -> do
   errorful_ <- errorCallback sink errorful
   files_ <- toJSVal files
   runSupabaseFrom "storage" bucket "remove" [files_] successful_ errorful_
+-----------------------------------------------------------------------------
+-- | https://supabase.com/docs/reference/javascript/storage-from-createsignedurl
+createSignedUrl
+  :: MisoString
+  -- ^ Bucket identifier
+  -> MisoString
+  -- ^ File to sign
+  -> Int
+  -- ^ Expiration time
+  -> (Value -> action)
+  -- ^ Response
+  -> (MisoString -> action)
+  -- ^ Error case
+  -> Effect parent model action
+createSignedUrl bucket file expiry successful errorful = withSink $ \sink -> do
+  successful_ <- successCallback sink errorful successful
+  errorful_ <- errorCallback sink errorful
+  file_ <- toJSVal file
+  expiry_ <- toJSVal expiry
+  runSupabaseFrom "storage" bucket "createSignedUrl" [file_, expiry_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-from-createsignedurls
 createSignedUrls
@@ -291,7 +316,7 @@ createSignedUrls bucket files expiry successful errorful = withSink $ \sink -> d
   errorful_ <- errorCallback sink errorful
   files_ <- toJSVal files
   expiry_ <- toJSVal expiry
-  runSupabaseFrom "storage" bucket "createSignedUrl" [files_, expiry_] successful_ errorful_
+  runSupabaseFrom "storage" bucket "createSignedUrls" [files_, expiry_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-from-createsigneduploadurl
 createSignedUploadUrl
@@ -299,16 +324,19 @@ createSignedUploadUrl
   -- ^ Bucket identifier
   -> MisoString
   -- ^ File to upload
+  -> Value
+  -- ^ Options
   -> (Value -> action)
   -- ^ Response
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-createSignedUploadUrl bucket file successful errorful = withSink $ \sink -> do
+createSignedUploadUrl bucket file opts successful errorful = withSink $ \sink -> do
   successful_ <- successCallback sink errorful successful
   errorful_ <- errorCallback sink errorful
   file_ <- toJSVal file
-  runSupabaseFrom "storage" bucket "createSignedUploadUrl" [file_] successful_ errorful_
+  opts_ <- toJSVal opts
+  runSupabaseFrom "storage" bucket "createSignedUploadUrl" [file_, opts_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-from-uploadtosignedurl
 uploadToSignedUrl
@@ -320,18 +348,21 @@ uploadToSignedUrl
   -- ^ Token
   -> File
   -- ^ File to upload
+  -> Value
+  -- ^ Options
   -> (Value -> action)
   -- ^ Response
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-uploadToSignedUrl bucket fileName token file successful errorful = withSink $ \sink -> do
+uploadToSignedUrl bucket fileName token file opts successful errorful = withSink $ \sink -> do
   successful_ <- successCallback sink errorful successful
   errorful_ <- errorCallback sink errorful
   fileName_ <- toJSVal fileName
   token_ <- toJSVal token
   file_ <- toJSVal file
-  runSupabaseFrom "storage" bucket "uploadToSignedUrl" [fileName_, token_, file_] successful_ errorful_
+  opts_ <- toJSVal opts
+  runSupabaseFrom "storage" bucket "uploadToSignedUrl" [fileName_, token_, file_, opts_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-from-getpublicurl
 getPublicUrl
@@ -339,15 +370,18 @@ getPublicUrl
   -- ^ Bucket identifier
   -> MisoString
   -- ^ File name
+  -> Value
+  -- ^ Options
   -> (Value -> action)
   -- ^ Response
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-getPublicUrl bucket fileName successful errorful = withSink $ \sink -> do
+getPublicUrl bucket fileName opts successful errorful = withSink $ \sink -> do
   successful_ <- successCallback sink errorful successful
   errorful_ <- errorCallback sink errorful
   fileName_ <- toJSVal fileName
-  runSupabaseFrom "storage" bucket "getPublicUrl" [fileName_] successful_ errorful_
+  opts_ <- toJSVal opts
+  runSupabaseFrom "storage" bucket "getPublicUrl" [fileName_, opts_] successful_ errorful_
 -----------------------------------------------------------------------------
 
