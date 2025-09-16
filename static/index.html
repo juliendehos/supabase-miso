@@ -12,45 +12,12 @@
         const supabase = createClient(supabase_url, supabase_key);
         globalThis['supabase'] = supabase;
         console.log('Supabase Instance: ', supabase);
-
-        // dmj: usage like: runSupabase('auth','signUp', args, successCallback, errorCallback);
-        globalThis['runSupabase'] = function (namespace, fnName, args, successful, errorful) {
-
-          console.log("runSupabase");
-          console.log(namespace);
-          console.log(fnName);
-          console.log(args);
-
-          globalThis['supabase'][namespace][fnName](...args)
-            .then( ({ data, error }) => {
-              if (data) successful(data);
-              if (error) errorful(error);
-            }
-          )
-        }
-
-        globalThis['runSupabaseFrom'] = function (namespace, fromArg, fnName, args, successful, errorful) {
-
-          console.log("runSupabaseFrom");
-          console.log(namespace);
-          console.log(fromArg);
-          console.log(fnName);
-          console.log(args);
-
-          globalThis['supabase'][namespace].from(fromArg)[fnName](...args)
-            .then( ({ data, error }) => {
-              if (data) successful(data);
-              if (error) errorful(error);
-            }
-          )
-        }
-
   </script> 
 
   </head>
-
   <body>
     <h1>supabase-miso</h1>
+    <script src="supabase-miso.js" type="module"></script>
     <script src="index.js" type="module"></script>
   </body>
 </html>

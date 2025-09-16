@@ -11,10 +11,11 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // list
 // const resp = await supabase.storage.from('avatars').list()
 // const resp = await supabase.storage.from('avatars').list('')
-const resp = await supabase.storage.from('avatars').list('', {})
+// const resp = await supabase.storage.from('avatars').list('', {})
 // const resp = await supabase.storage.from('avatars').list('test')
 // const resp = await supabase.storage.from('avatars').list('test', {limit: 1, offset: 1})
 // const resp = await supabase.storage.from('avatars').list('', {limit: 1, offset: 1})
+const resp = await supabase.storage.from('avatars').list('', {limit: 10, search: "windsurf"})
 
 console.log(resp)
 

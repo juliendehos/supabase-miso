@@ -1,12 +1,13 @@
 
 {-# LANGUAGE CPP                       #-}
 {-# LANGUAGE LambdaCase                #-}
+{-# LANGUAGE MultilineStrings          #-}
 {-# LANGUAGE OverloadedLabels          #-}
 {-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE RecordWildCards           #-}
 
 import Data.Aeson hiding ((.=))
-import Data.Aeson.KeyMap
+import Data.Aeson.KeyMap qualified as KM
 import Miso
 import Miso.CSS qualified as CSS
 import Miso.Lens
@@ -15,6 +16,23 @@ import Miso.Html.Event as E
 -- import Miso.Html.Property as P
 
 import Supabase.Miso.Storage
+
+-------------------------------------------------------------------------------
+-- helper
+-------------------------------------------------------------------------------
+
+emptyOptions :: Value
+emptyOptions = Object KM.empty
+
+(.+) :: ToJSON a => Value -> (KM.Key, a) -> Value
+(.+) opts (k, v) =
+  let v' = toJSON v
+  in case opts of
+    Object o  -> Object (KM.insert k v' o)
+    _         -> Object (KM.singleton k v')
+
+optionsExample1 :: Value
+optionsExample1 = emptyOptions .+ ("limit", 10) .+ ("search", "windsurf")
 
 -------------------------------------------------------------------------------
 -- model
@@ -86,9 +104,15 @@ viewModel Model{..} = div_ []
       [ button_ [ onClick ActionAskListBuckets ] [ "listBuckets" ]
       ]
   , p_ [] 
-      [ button_ [ onClick (ActionAskListAllFiles "" Null) ] [ "listAllFiles '' Null" ]
-      , button_ [ onClick (ActionAskListAllFiles "test" Null) ] [ "listAllFiles 'test' Null" ]
-      , button_ [ onClick (ActionAskListAllFiles "test" (Object $ singleton "limit" (Number 1))) ] [ "listAllFiles 'test' {limit: 1}" ]
+      [ button_ 
+          [ onClick (ActionAskListAllFiles "" Null) ]
+          [ "listAllFiles '' Null" ]
+      , button_ 
+          [ onClick (ActionAskListAllFiles "test" Null) ]
+          [ "listAllFiles 'test' Null" ]
+      , button_ 
+          [ onClick (ActionAskListAllFiles "" ( emptyOptions .+ ("limit", 10::Int) .+ ("search", "windsurf"::String) )) ]
+          [ "listAllFiles ' {limit: 10, search: 'windsurf'}" ]
       ]
   , p_ []
       [ "data: "
@@ -118,43 +142,27 @@ viewModel Model{..} = div_ []
 --  main
 -------------------------------------------------------------------------------
 
-main :: IO ()
-main = 
-  run $ startApp (component mkModel updateModel viewModel)
 #ifndef WASM
+main :: IO ()
+main = do
+  supabasemisojs <- ms <$> readFile "js/supabase-miso.js"
+  run $ startApp (component mkModel updateModel viewModel)
     { scripts =
        [ Module
           """
-
           import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
           const supabase_url = 'https://cmeicmtkrdbrelovyssz.supabase.co';
           const supabase_key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtZWljbXRrcmRicmVsb3Z5c3N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0NTM2MTMsImV4cCI6MjA3MjAyOTYxM30._ga2HbuYt8JJTKYEQZc5ACAP2VT3KyjcbbV1Og0wEG0' ;
           const supabase = createClient(supabase_url, supabase_key);
           globalThis['supabase'] = supabase;
           console.log('Supabase Instance: ', supabase)
-
-          // dmj: usage like: runSupabase('auth','signUp', args, successCallback, errorCallback);
-          globalThis['runSupabase'] = function (namespace, fnName, args, successful, errorful) {
-            globalThis['supabase'][namespace][fnName](...args)
-              .then( ({ data, error }) => {
-                if (data) successful(data);
-                if (error) errorful(error);
-              }
-            )
-          }
-
-          globalThis['runSupabaseFrom'] = function (namespace, fromArg, fnName, args, successful, errorful) {
-            globalThis['supabase'][namespace].from(fromArg)[fnName](...args)
-              .then( ({ data, error }) => {
-                if (data) successful(data);
-                if (error) errorful(error);
-              }
-            )
-          }
-
           """
+       , Script supabasemisojs
        ]
     }
+#else
+main :: IO ()
+main = run $ startApp (component mkModel updateModel viewModel)
 #endif
 
 #ifdef WASM
