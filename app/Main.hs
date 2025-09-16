@@ -6,12 +6,13 @@
 {-# LANGUAGE RecordWildCards           #-}
 
 import Data.Aeson hiding ((.=))
+import Data.Aeson.KeyMap
 import Miso
 import Miso.CSS qualified as CSS
 import Miso.Lens
 import Miso.Html.Element as H
 import Miso.Html.Event as E
-import Miso.Html.Property as P
+-- import Miso.Html.Property as P
 
 import Supabase.Miso.Storage
 
@@ -39,8 +40,10 @@ modelError = lens _modelError (\ record field -> record {_modelError = field})
 
 data Action
   = ActionError MisoString
-  | ActionHandle Value
+  | ActionHandleValue Value
+  | ActionHandleValues [Value]
   | ActionAskListBuckets 
+  | ActionAskListAllFiles MisoString Value
 
 -------------------------------------------------------------------------------
 -- update
@@ -54,14 +57,23 @@ updateModel = \case
     modelError .= errorMessage
     io_ $ consoleError errorMessage
 
-  ActionHandle v -> do
+  ActionHandleValue v -> do
     let msg = ms $ show v
     modelError .= " "
     modelData .= msg
     io_ $ consoleLog msg
 
+  ActionHandleValues vs -> do
+    let msg = ms $ show vs
+    modelError .= " "
+    modelData .= msg
+    io_ $ consoleLog msg
+
   ActionAskListBuckets ->
-    listBuckets ActionHandle ActionError
+    listBuckets ActionHandleValue ActionError
+
+  ActionAskListAllFiles fp opts ->
+    listAllFiles "avatars" fp opts ActionHandleValues ActionError
 
 -------------------------------------------------------------------------------
 -- view
@@ -70,7 +82,14 @@ updateModel = \case
 viewModel :: Model -> View Model Action
 viewModel Model{..} = div_ []
   [ h2_ [] [ "Storage" ]
-  , p_ [] [ button_ [ onClick ActionAskListBuckets ] [ "listBuckets" ] ]
+  , p_ [] 
+      [ button_ [ onClick ActionAskListBuckets ] [ "listBuckets" ]
+      ]
+  , p_ [] 
+      [ button_ [ onClick (ActionAskListAllFiles "" Null) ] [ "listAllFiles '' Null" ]
+      , button_ [ onClick (ActionAskListAllFiles "test" Null) ] [ "listAllFiles 'test' Null" ]
+      , button_ [ onClick (ActionAskListAllFiles "test" (Object $ singleton "limit" (Number 1))) ] [ "listAllFiles 'test' {limit: 1}" ]
+      ]
   , p_ []
       [ "data: "
       , pre_ 

@@ -8,7 +8,8 @@
 -----------------------------------------------------------------------------
 module Supabase.Miso.Storage
   ( -- * Functions
-  listBuckets
+    listBuckets
+  , listAllFiles
     -- * Types
   ) where
 -----------------------------------------------------------------------------
@@ -187,10 +188,11 @@ listAllFiles
 listAllFiles bucket fileName options successful errorful = withSink $ \sink -> do
   successful_ <- successCallback sink errorful successful
   errorful_ <- errorCallback sink errorful
-  bucket_ <- toJSVal bucket
   options_ <- toJSVal options
   fileName_ <- toJSVal fileName
-  runSupabaseFrom "storage" bucket "list" [fileName_, options_] successful_ errorful_
+  if options == Null
+    then runSupabaseFrom "storage" bucket "list" [fileName_] successful_ errorful_
+    else runSupabaseFrom "storage" bucket "list" [fileName_, options_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-from-list
 replaceFile
