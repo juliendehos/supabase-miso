@@ -190,9 +190,7 @@ listAllFiles bucket fileName options successful errorful = withSink $ \sink -> d
   errorful_ <- errorCallback sink errorful
   options_ <- toJSVal options
   fileName_ <- toJSVal fileName
-  if options == Null
-    then runSupabaseFrom "storage" bucket "list" [fileName_] successful_ errorful_
-    else runSupabaseFrom "storage" bucket "list" [fileName_, options_] successful_ errorful_
+  runSupabaseFrom "storage" bucket "list" [fileName_, options_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-from-list
 replaceFile
