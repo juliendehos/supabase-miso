@@ -15,16 +15,40 @@
 
         // dmj: usage like: runSupabase('auth','signUp', args, successCallback, errorCallback);
         globalThis['runSupabase'] = function (namespace, fnName, args, successful, errorful) {
-          globalThis['supabase'][namespace][fnName](args).then(({ data, error }) => {
-            if (data) successful(data);
-            if (error) errorful(error);
-          });
+
+          console.log("runSupabase");
+          console.log(namespace);
+          console.log(fnName);
+          console.log(args);
+
+          const p = ({ data, error }) => {
+              if (data) successful(data);
+              if (error) errorful(error);
+            };
+          if (Array.isArray(args) && args.length>0) {
+            globalThis['supabase'][namespace][fnName](args).then(p);
+          } else {
+            globalThis['supabase'][namespace][fnName]().then(p);
+          }
         }
-        globalThis['runSupabaseFrom'] = function (namespace, from, fnName, args, successful, errorful) {
-          globalThis['supabase'][namespace]['from'](from)[fnName](this, args).then(({ data, error }) => {
-            if (data) successful(data);
-            if (error) errorful(error);
-          });
+
+        globalThis['runSupabaseFrom'] = function (namespace, fromArg, fnName, args, successful, errorful) {
+
+          console.log("runSupabaseFrom");
+          console.log(namespace);
+          console.log(fromArg);
+          console.log(fnName);
+          console.log(args);
+
+          const p = ({ data, error }) => {
+              if (data) successful(data);
+              if (error) errorful(error);
+            };
+          if (Array.isArray(args) && args.length>0) {
+            globalThis['supabase'][namespace].from(fromArg)[fnName](args).then(p);
+          } else {
+            globalThis['supabase'][namespace].from(fromArg)[fnName]().then(p);
+          }
         }
 
   </script> 

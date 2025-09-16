@@ -8,7 +8,7 @@
 -----------------------------------------------------------------------------
 module Supabase.Miso.Storage
   ( -- * Functions
-  listBuckets'
+  listBuckets
     -- * Types
   ) where
 -----------------------------------------------------------------------------
@@ -72,31 +72,16 @@ getBucket args successful errorful = withSink $ \sink -> do
   runSupabase "storage" "getBucket" [args_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-listbuckets
-
-listBuckets'
+listBuckets
   :: (Value -> action)
   -- ^ Response
   -> (MisoString -> action)
   -- ^ Error case
   -> Effect parent model action
-listBuckets' successful errorful = withSink $ \sink -> do
+listBuckets successful errorful = withSink $ \sink -> do
   successful_ <- successCallback sink errorful successful
   errorful_ <- errorCallback sink errorful
   runSupabase "storage" "listBuckets" emptyArgs successful_ errorful_
-
-listBuckets
-  :: MisoString
-  -- ^ Bucket identifier
-  -> (Value -> action)
-  -- ^ Response
-  -> (MisoString -> action)
-  -- ^ Error case
-  -> Effect parent model action
-listBuckets args successful errorful = withSink $ \sink -> do
-  successful_ <- successCallback sink errorful successful
-  errorful_ <- errorCallback sink errorful
-  args_ <- toJSVal args
-  runSupabase "storage" "listBuckets" [args_] successful_ errorful_
 -----------------------------------------------------------------------------
 -- | https://supabase.com/docs/reference/javascript/storage-updatebucket
 updateBucket
