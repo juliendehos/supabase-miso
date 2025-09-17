@@ -178,7 +178,8 @@ listAllFiles
   -- ^ Bucket identifier
   -> MisoString
   -- ^ The file name
-  -> Value
+  -- TODO -> Value
+  -> Opts
   -- ^ Options
   -> ([Value] -> action)
   -- ^ Response

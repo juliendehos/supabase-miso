@@ -44,7 +44,7 @@ data Action
   | ActionHandleValue Value
   | ActionHandleValues [Value]
   | ActionAskListBuckets 
-  | ActionAskListAllFiles MisoString Value
+  | ActionAskListAllFiles MisoString Opts
 
 -------------------------------------------------------------------------------
 -- update
@@ -88,13 +88,14 @@ viewModel Model{..} = div_ []
       ]
   , p_ [] 
       [ button_ 
-          [ onClick (ActionAskListAllFiles "" emptyOptions) ]
-          [ "listAllFiles '' emptyOptions" ]
+          [ onClick (ActionAskListAllFiles "" mempty) ]
+          [ "listAllFiles '' mempty" ]
       , button_ 
-          [ onClick (ActionAskListAllFiles "test" emptyOptions) ]
-          [ "listAllFiles 'test' emptyOptions" ]
+          [ onClick (ActionAskListAllFiles "test" mempty) ]
+          [ "listAllFiles 'test' mempty" ]
       , button_ 
-          [ onClick (ActionAskListAllFiles "" ( emptyOptions .+ ("limit", 10::Int) .+ ("search", "windsurf"::String) )) ]
+          [ onClick (ActionAskListAllFiles "" (toOpts "limit" 10 <> toOpts "search" "windsurf")) ]
+          -- [ onClick (ActionAskListAllFiles "" ( emptyOptions .+ ("limit", 10::Int) .+ ("search", "windsurf"::String) )) ]
           [ "listAllFiles ' {limit: 10, search: 'windsurf'}" ]
       ]
   , p_ []
