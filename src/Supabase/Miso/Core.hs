@@ -119,22 +119,20 @@ emptyOptions = Aeson.Object KM.empty
     Aeson.Object o  -> Aeson.Object (KM.insert k v' o)
     _               -> Aeson.Object (KM.singleton k v')
 
-newtype Opts' a = Opts' { unOpts' :: a }
+newtype Opts = Opts { unOpts :: Value }
   deriving (Eq, ToJSVal)
 
-type Opts = Opts' Value
-
 instance Semigroup Opts where
-  Opts' (Aeson.Object km1) <> Opts' (Aeson.Object km2) = Opts' $ Aeson.Object (KM.union km1 km2)
-  Opts' (Aeson.Object km1) <> _ = Opts' $ Aeson.Object km1
-  _ <> Opts' (Aeson.Object km2) = Opts' $ Aeson.Object km2
+  Opts (Aeson.Object km1) <> Opts (Aeson.Object km2) = Opts $ Aeson.Object (KM.union km1 km2)
+  Opts (Aeson.Object km1) <> _ = Opts $ Aeson.Object km1
+  _ <> Opts (Aeson.Object km2) = Opts $ Aeson.Object km2
   _ <> _ = mempty
 
 instance Monoid Opts where
-  mempty = Opts' (Aeson.Object KM.empty)
+  mempty = Opts (Aeson.Object KM.empty)
 
 toOpts :: ToJSON a => Aeson.Key -> a -> Opts
-toOpts k v = Opts' $ Aeson.Object $ KM.singleton k (toJSON v)
+toOpts k v = Opts $ Aeson.Object $ KM.singleton k (toJSON v)
 
 opts1 :: Opts
 opts1 = toOpts "limit" 1  <> toOpts "search" "windsurf"
