@@ -28,7 +28,7 @@ library
   hs-source-dirs:
     src
   build-depends:
-    base < 5, miso, jsaddle, aeson, time, unordered-containers, vector, hashable
+    base < 5, miso, jsaddle, aeson, time, unordered-containers, vector, hashable, mtl
   exposed-modules:
     Supabase.Miso.Auth
     Supabase.Miso.Core

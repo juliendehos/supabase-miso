@@ -29,6 +29,7 @@ import Miso.FFI (syncCallback1, File)
 -----------------------------------------------------------------------------
 import Control.Monad
 import Language.Javascript.JSaddle hiding (Success)
+import Control.Monad.Writer.Lazy
 -----------------------------------------------------------------------------
 -- | runSupabase('auth','signUp', args, successCallback, errorCallback);
 runSupabase
@@ -119,6 +120,8 @@ emptyOptions = Aeson.Object KM.empty
     Aeson.Object o  -> Aeson.Object (KM.insert k v' o)
     _               -> Aeson.Object (KM.singleton k v')
 
+-------------------------------------------------------------------------------
+
 newtype Opts = Opts { unOpts :: Value }
   deriving (Eq, ToJSVal)
 
@@ -134,7 +137,21 @@ instance Monoid Opts where
 toOpts :: ToJSON a => Aeson.Key -> a -> Opts
 toOpts k v = Opts $ Aeson.Object $ KM.singleton k (toJSON v)
 
-opts1 :: Opts
-opts1 = toOpts "limit" 1  <> toOpts "search" "windsurf"
--- opts1 = mconcat [toOpts "limit" 1 , toOpts "search" "windsurf"]
+-- opts1 :: Opts
+-- opts1 = toOpts "limit" 1  <> toOpts "search" "windsurf"
+
+-------------------------------------------------------------------------------
+
+type Opts2 = Writer Opts ()
+
+toOpts2 :: ToJSON a => Key -> a -> Opts2
+toOpts2 k v = tell $ toOpts k v
+
+opts2 :: Opts2
+opts2 = do
+  toOpts2 "limit" 10
+  toOpts2 "search" "windsurf"
+
+runOpts2 :: Opts2 -> Aeson.Value
+runOpts2 = unOpts . execWriter
 
