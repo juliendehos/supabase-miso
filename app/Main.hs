@@ -1,6 +1,4 @@
 
-{-# LANGUAGE CPP                       #-}
-{-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE MultilineStrings          #-}
 {-# LANGUAGE OverloadedLabels          #-}
 {-# LANGUAGE OverloadedStrings         #-}
@@ -94,6 +92,7 @@ viewModel Model{..} = div_ []
           [ onClick (ActionAskListAllFiles "test" mempty) ]
           [ "listAllFiles 'test' mempty" ]
       , button_ 
+          -- [ onClick (ActionAskListAllFiles "" (runOpts2 (toOpts2 "limit" 10 >> toOpts2 "search" "windsurf"))) ]
           [ onClick (ActionAskListAllFiles "" (toOpts "limit" 10 <> toOpts "search" "windsurf")) ]
           -- [ onClick (ActionAskListAllFiles "" ( emptyOptions .+ ("limit", 10::Int) .+ ("search", "windsurf"::String) )) ]
           [ "listAllFiles ' {limit: 10, search: 'windsurf'}" ]

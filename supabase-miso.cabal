@@ -37,7 +37,7 @@ library
     Supabase.Miso.Realtime
     Supabase.Miso.Storage
   default-language:
-    Haskell2010
+    GHC2024
 
 executable app
   import:

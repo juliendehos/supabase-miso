@@ -1,5 +1,6 @@
 -----------------------------------------------------------------------------
-{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 -----------------------------------------------------------------------------
 module Supabase.Miso.Storage
   ( -- * Functions
