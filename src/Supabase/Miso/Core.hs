@@ -12,14 +12,11 @@ module Supabase.Miso.Core
   , successCallback
   , successCallbackFile
   , errorCallback
-  , emptyOptions
-  , (.+)
-  , Opts
-  , toOpts
   ) where
 -----------------------------------------------------------------------------
 import Data.Aeson as Aeson
 import Data.Aeson.KeyMap qualified as KM
+import Data.Maybe (isJust)
 import Miso.String
 import Miso.FFI (syncCallback1, File)
 -----------------------------------------------------------------------------
@@ -125,61 +122,4 @@ errorCallback sink errorful =
       Success result ->
         sink (errorful result)
 -----------------------------------------------------------------------------
-
-emptyOptions :: Value
-emptyOptions = Aeson.Object KM.empty
-
-(.+) :: ToJSON a => Value -> (KM.Key, a) -> Value
-(.+) opts (k, v) =
-  let v' = toJSON v
-  in case opts of
-    Aeson.Object o  -> Aeson.Object (KM.insert k v' o)
-    _               -> Aeson.Object (KM.singleton k v')
-
--------------------------------------------------------------------------------
-
-newtype Opts = Opts { unOpts :: Value }
-  deriving (Eq, ToJSVal)
-
-instance Semigroup Opts where
-  Opts (Aeson.Object km1) <> Opts (Aeson.Object km2) = Opts $ Aeson.Object (KM.union km1 km2)
-  Opts (Aeson.Object km1) <> _ = Opts $ Aeson.Object km1
-  _ <> Opts (Aeson.Object km2) = Opts $ Aeson.Object km2
-  _ <> _ = mempty
-
-instance Monoid Opts where
-  mempty = Opts (Aeson.Object KM.empty)
-
-toOpts :: ToJSON a => Aeson.Key -> a -> Opts
-toOpts k v = Opts $ Aeson.Object $ KM.singleton k (toJSON v)
-
-opts1 :: Opts
-opts1 = toOpts "limit" 1  <> toOpts "search" "windsurf"
-
-val1 :: Value
-val1 = unOpts opts1
-
-jsval1 :: JSM JSVal
-jsval1 = toJSVal opts1
-
--------------------------------------------------------------------------------
-
-type Opts2 = Writer Opts ()
-
-toOpts2 :: ToJSON a => Key -> a -> Opts2
-toOpts2 k v = tell $ toOpts k v
-
-runOpts2 :: Opts2 -> Aeson.Value
-runOpts2 = unOpts . execWriter
-
-opts2 :: Opts2
-opts2 = do
-  toOpts2 "limit" 10
-  toOpts2 "search" "windsurf"
-
-val2 :: Value
-val2 = runOpts2 opts2
-
-jsval2 :: JSM JSVal
-jsval2 = toJSVal $ runOpts2 opts2
 

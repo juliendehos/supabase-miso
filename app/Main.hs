@@ -12,7 +12,6 @@ import Miso.Html.Element as H
 import Miso.Html.Event as E
 -- import Miso.Html.Property as P
 
-import Supabase.Miso.Core
 import Supabase.Miso.Storage
 
 -------------------------------------------------------------------------------
@@ -42,7 +41,7 @@ data Action
   | ActionHandleValue Value
   | ActionHandleValues [Value]
   | ActionAskListBuckets 
-  | ActionAskListAllFiles MisoString Opts
+  | ActionAskListAllFiles MisoString SearchOptions
 
 -------------------------------------------------------------------------------
 -- update
@@ -87,14 +86,14 @@ viewModel Model{..} = div_ []
   , p_ [] 
       [ button_ 
           [ onClick (ActionAskListAllFiles "" mempty) ]
+          -- [ onClick (ActionAskListAllFiles "" mempty) ]
           [ "listAllFiles '' mempty" ]
       , button_ 
           [ onClick (ActionAskListAllFiles "test" mempty) ]
           [ "listAllFiles 'test' mempty" ]
       , button_ 
-          -- [ onClick (ActionAskListAllFiles "" (runOpts2 (toOpts2 "limit" 10 >> toOpts2 "search" "windsurf"))) ]
-          [ onClick (ActionAskListAllFiles "" (toOpts "limit" 10 <> toOpts "search" "windsurf")) ]
-          -- [ onClick (ActionAskListAllFiles "" ( emptyOptions .+ ("limit", 10::Int) .+ ("search", "windsurf"::String) )) ]
+          -- [ onClick (ActionAskListAllFiles "" (limit 10)) ]
+          [ onClick (ActionAskListAllFiles "" (limit 10 <> search "windsurf")) ]
           [ "listAllFiles ' {limit: 10, search: 'windsurf'}" ]
       ]
   , p_ []
