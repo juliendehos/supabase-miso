@@ -42,6 +42,7 @@ data Action
   | ActionHandleValues [Value]
   | ActionAskListBuckets 
   | ActionAskListAllFiles MisoString SearchOptions
+  | ActionHandleFileObjects [FileObject]
 
 -------------------------------------------------------------------------------
 -- update
@@ -71,7 +72,13 @@ updateModel = \case
     listBuckets ActionHandleValues ActionError
 
   ActionAskListAllFiles fp opts ->
-    listAllFiles "avatars" fp opts ActionHandleValues ActionError
+    listAllFiles "avatars" fp opts ActionHandleFileObjects ActionError
+
+  ActionHandleFileObjects vs -> do
+    let msg = ms $ show vs
+    modelError .= " "
+    modelData .= msg
+    io_ $ consoleLog msg
 
 -------------------------------------------------------------------------------
 -- view

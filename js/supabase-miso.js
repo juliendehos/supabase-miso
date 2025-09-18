@@ -8,6 +8,9 @@ globalThis['runSupabase'] = function (namespace, fnName, args, successful, error
     console.log(fnName);
     console.log(args);
 
+    console.log(error);
+    console.log(data);
+
     if (data) successful(data);
     if (error) errorful(error);
   });
@@ -21,6 +24,9 @@ globalThis['runSupabaseQuery'] = function (from, fnName, args, successful, error
     console.log(fnName);
     console.log(args);
 
+    console.log(error);
+    console.log(data);
+
     if (data) successful(data);
     if (error) errorful(error);
   });
@@ -33,6 +39,9 @@ globalThis['runSupabaseFrom'] = function (namespace, fromArg, fnName, args, succ
     console.log(namespace);
     console.log(fnName);
     console.log(args);
+
+    console.log(error);
+    console.log(data);
 
     if (data) successful(data);
     if (error) errorful(error);

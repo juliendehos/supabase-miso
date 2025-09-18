@@ -31,6 +31,7 @@ module Supabase.Miso.Storage
   , offset
   , search 
   , sortBy
+  , FileObject
   ) where
 -----------------------------------------------------------------------------
 import           Control.Applicative
@@ -238,15 +239,67 @@ search x = mempty { _search = Just x }
 sortBy :: SortBy -> SearchOptions
 sortBy x = mempty { _sortBy = Just x }
 -----------------------------------------------------------------------------
+
+{-
+data Bucket = Bucket
+  { created_at :: MisoString
+  , id :: MisoString
+  , name :: MisoString
+  , owner :: MisoString
+  , public :: Bool
+  , updated_at :: MisoString
+  , allowed_mime_types :: [MisoString]
+  , file_size_limit :: Maybe Int
+  , type_ :: Maybe MisoString   -- TODO BucketType?
+  } deriving (Show)
+
+instance FromJSON Bucket where
+  parseJSON = withObject "Bucket" $ \v ->
+    Bucket
+      <$> v .: "created_at"
+      <*> v .: "id"
+      <*> v .: "name"
+      <*> v .: "owner"
+      <*> v .: "public"
+      <*> v .: "updated_at"
+      <*> v .: "allowed_mime_types"
+      <*> v .: "file_size_limit"
+      <*> v .: "type"
+-}
+
+-----------------------------------------------------------------------------
+
+data FileObject = FileObject
+  { -- bucket_id :: MisoString
+  -- , buckets :: [Bucket]
+  created_at :: Maybe MisoString
+  , id :: Maybe MisoString
+  , last_accessed_at :: Maybe MisoString
+  -- TODO , metadata :: Map MisoString Value
+  , name :: MisoString
+  , owner :: Maybe MisoString
+  -- , updated_at :: MisoString
+  } deriving (Show)
+
+instance FromJSON FileObject where
+  parseJSON = withObject "FileObject" $ \v ->
+    FileObject
+      -- <$> v .: "bucket_id"
+      <$> v .: "created_at"
+      <*> v .: "id"
+      <*> v .: "last_accessed_at"
+      <*> v .: "name"
+      <*> (v .: "owner" <|> pure Nothing)
+
+
 listAllFiles
   :: MisoString
   -- ^ Bucket identifier
   -> MisoString
   -- ^ The file name
-  -- TODO -> Value
   -> SearchOptions
   -- ^ Options
-  -> ([Value] -> action)
+  -> ([FileObject] -> action)
   -- ^ Response
   -> (MisoString -> action)
   -- ^ Errorful
