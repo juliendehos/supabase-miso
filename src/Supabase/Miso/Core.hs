@@ -153,8 +153,14 @@ instance Monoid Opts where
 toOpts :: ToJSON a => Aeson.Key -> a -> Opts
 toOpts k v = Opts $ Aeson.Object $ KM.singleton k (toJSON v)
 
-optsExample1 :: Opts
-optsExample1 = toOpts "limit" 1  <> toOpts "search" "windsurf"
+opts1 :: Opts
+opts1 = toOpts "limit" 1  <> toOpts "search" "windsurf"
+
+val1 :: Value
+val1 = unOpts opts1
+
+jsval1 :: JSM JSVal
+jsval1 = toJSVal opts1
 
 -------------------------------------------------------------------------------
 
@@ -163,11 +169,17 @@ type Opts2 = Writer Opts ()
 toOpts2 :: ToJSON a => Key -> a -> Opts2
 toOpts2 k v = tell $ toOpts k v
 
+runOpts2 :: Opts2 -> Aeson.Value
+runOpts2 = unOpts . execWriter
+
 opts2 :: Opts2
 opts2 = do
   toOpts2 "limit" 10
   toOpts2 "search" "windsurf"
 
-runOpts2 :: Opts2 -> Aeson.Value
-runOpts2 = unOpts . execWriter
+val2 :: Value
+val2 = runOpts2 opts2
+
+jsval2 :: JSM JSVal
+jsval2 = toJSVal $ runOpts2 opts2
 
